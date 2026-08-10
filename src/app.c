@@ -27,6 +27,16 @@ static int append_text(char *dst,int size,const char *src)
     while (src&&src[i]) { if (used+i>=size-1) return 0; dst[used+i]=src[i]; ++i; }
     dst[used+i]=0; return 1;
 }
+static void append_number(char *dst,int size,LONG value)
+{
+    char reverse[16],digits[16]; int count=0,out=0; ULONG number;
+    if (value<0) { append_text(dst,size,"-"); number=(ULONG)(-(value+1))+1; } else number=(ULONG)value;
+    if (!number) reverse[count++]='0';
+    while (number&&count<15) { reverse[count++]=(char)('0'+number%10); number/=10; }
+    while (count) digits[out++]=reverse[--count];
+    digits[out]=0; append_text(dst,size,digits);
+}
+
 static void draw_text(struct RastPort *rp,WORD x,WORD y,WORD right,const char *text)
 {
     ULONG length=0; while (text[length]) ++length;
@@ -158,7 +168,12 @@ static void update_stations(TKApp *app)
     app->stations.count=0; TK_SetStatus(app,"Loading fuel prices - please wait"); TK_Draw(app);
     result=TK_StationsSearch(&app->https,&app->config,app->json_buffer,app->json_buffer_size,&app->stations);
     if (result==TK_STATIONS_OK) { app->locations.count=0; TK_SetStatus(app,"Fuel prices loaded"); }
-    else TK_SetStatus(app,TK_StationsErrorText(result));
+    else if (result==TK_HTTPS_READ_FAILED) {
+        char detail[80]; detail[0]=0; append_text(detail,sizeof(detail),"Read fail B="); append_number(detail,sizeof(detail),app->https.last_response_bytes);
+        append_text(detail,sizeof(detail)," TLS="); append_number(detail,sizeof(detail),app->https.last_tls_error);
+        append_text(detail,sizeof(detail)," SE="); append_number(detail,sizeof(detail),app->https.last_socket_error);
+        append_text(detail,sizeof(detail)," C="); append_number(detail,sizeof(detail),app->https.response_chunked); TK_SetStatus(app,detail);
+    } else TK_SetStatus(app,TK_StationsErrorText(result));
     TK_Draw(app);
 }
 int TK_Run(TKApp *app)

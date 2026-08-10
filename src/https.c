@@ -162,6 +162,7 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     int chunked = 0;
     int result = TK_HTTPS_OK;
     redirect_location[0] = 0;
+    client->last_response_bytes = 0; client->response_chunked = 0; client->last_tls_error = 0; client->last_socket_error = 0;
     if (!parse_url(url, g_host, sizeof(g_host), g_path, sizeof(g_path), &port)) return TK_HTTPS_BAD_URL;
     context = AmiTLS13_Connect(g_host, port, AMITLS13F_INSECURE);
     if (!context) { client->last_socket_error = AmiTLS13_SocketErrno(); return TK_HTTPS_CONNECT_FAILED; }
@@ -181,15 +182,15 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
         received = AmiTLS13_Read(context, output + used, (ULONG)read_size);
         if (received < 0) {
             if (expected_total >= 0 && used >= expected_total) break;
-            client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_READ_FAILED; goto done;
+            client->last_response_bytes = used; client->last_tls_error = AmiTLS13_GetLastError(context); client->last_socket_error = AmiTLS13_SocketErrno(); result = TK_HTTPS_READ_FAILED; goto done;
         }
         if (received == 0) break;
-        used += received;
+        used += received; client->last_response_bytes = used;
         output[used] = 0;
         if (expected_total < 0) {
             early_body = find_header_end((char *)output, used, &early_header_size);
             if (early_body) {
-                chunked = header_is_chunked((char *)output, early_header_size);
+                chunked = header_is_chunked((char *)output, early_header_size); client->response_chunked = (UBYTE)chunked;
                 declared_length = parse_content_length((char *)output, early_header_size);
                 if (!chunked && declared_length >= 0) {
                     if (declared_length > output_size - 1 - early_header_size) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; }

@@ -19,6 +19,8 @@ typedef struct TKHttpsClient {
     LONG last_tls_error;
     LONG last_socket_error;
     WORD last_http_status;
+    LONG last_response_bytes;
+    UBYTE response_chunked;
 } TKHttpsClient;
 int TK_HttpsOpen(TKHttpsClient *client);
 void TK_HttpsClose(TKHttpsClient *client);
