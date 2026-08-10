@@ -186,10 +186,10 @@ int TK_Run(TKApp *app)
             if (cls==IDCMP_CLOSEWINDOW) done=1;
             else if (cls==IDCMP_REFRESHWINDOW) { BeginRefresh(app->window); TK_Draw(app); EndRefresh(app->window,TRUE); }
             else if (cls==IDCMP_NEWSIZE) TK_Draw(app);
-            else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x10) done=1;
-            else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x21) search_locations(app);
-            else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x16) update_stations(app);
-            else if (cls==IDCMP_RAWKEY&&(code&0x7f)>=0x01&&(code&0x7f)<=0x04) select_location(app,(code&0x7f)-1);
+            else if (cls==IDCMP_RAWKEY&&!(code&0x80)&&(code&0x7f)==0x10) done=1;
+            else if (cls==IDCMP_RAWKEY&&!(code&0x80)&&(code&0x7f)==0x21) search_locations(app);
+            else if (cls==IDCMP_RAWKEY&&!(code&0x80)&&(code&0x7f)==0x16) update_stations(app);
+            else if (cls==IDCMP_RAWKEY&&!(code&0x80)&&(code&0x7f)>=0x01&&(code&0x7f)<=0x04) select_location(app,(code&0x7f)-1);
         }
     }
     return 0;
