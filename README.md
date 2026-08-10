@@ -13,8 +13,10 @@ Phase 1 is implemented:
 - Fallback to a minimum-size window at position `0,0`.
 - Central cleanup for windows, libraries and allocated memory.
 - Large future network and JSON buffers allocated in public memory instead of the process stack.
+- Validated configuration for API key, location, coordinates, radius, fuel, sorting, open-only filtering and update interval.
+- A user-owned API key is loaded and saved but never displayed or logged.
 
-No network requests, API-key handling or JSON parsing are implemented yet.
+Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. The personal API key is never displayed or logged. Network requests and JSON parsing are not implemented yet.
 
 ## Build
 

@@ -18,7 +18,7 @@
 - Add clean startup and shutdown paths for every opened resource.
 - Keep large network and JSON buffers out of the process stack by using `AllocMem(MEMF_PUBLIC)`.
 
-## Phase 2: Configuration
+## Phase 2: Configuration (completed)
 
 - Add `Tankerkoenig.conf` in the program directory.
 - Support these initial settings:

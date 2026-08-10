@@ -6,9 +6,10 @@ BUILD := build
 TARGET := $(BUILD)/Tankerkoenig
 CORE := $(BUILD)/tkcore
 TARGET_OBJS := $(BUILD)/launcher.o
-CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o
+CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o $(BUILD)/config.o
+CONFIG := $(BUILD)/Tankerkoenig.conf
 .PHONY: all clean
-all: $(TARGET) $(CORE)
+all: $(TARGET) $(CORE) $(CONFIG)
 $(BUILD):
 	mkdir -p $(BUILD)
 $(BUILD)/%.o: src/%.c | $(BUILD)
@@ -17,5 +18,8 @@ $(TARGET): $(TARGET_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(TARGET_OBJS)
 $(CORE): $(CORE_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(CORE_OBJS)
+$(CONFIG): Tankerkoenig.conf | $(BUILD)
+	cp Tankerkoenig.conf $@
+
 clean:
 	rm -rf $(BUILD)

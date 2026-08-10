@@ -2,6 +2,7 @@
 #define TANKERKOENIG_H
 #include <exec/types.h>
 #include <intuition/intuition.h>
+#include "config.h"
 #define TK_APP_NAME "Tankerkoenig"
 #define TK_VERSION "0.1"
 #define TK_MIN_WIDTH 320
@@ -13,6 +14,7 @@
 #define TK_NETWORK_BUFFER_SIZE 8192UL
 #define TK_JSON_BUFFER_SIZE 32768UL
 typedef struct TKApp {
+    TKConfig config;
     struct Window *window;
     UBYTE *network_buffer;
     UBYTE *json_buffer;

@@ -10,10 +10,11 @@
 #include "tankerkoenig.h"
 struct IntuitionBase *IntuitionBase;
 struct GfxBase *GfxBase;
-static void draw_text(struct RastPort *rp, WORD x, WORD y, const char *text)
+static void draw_text(struct RastPort *rp, WORD x, WORD y, WORD right, const char *text)
 {
     ULONG length = 0;
     while (text[length]) ++length;
+    while (length > 0 && x + TextLength(rp, (STRPTR)text, length) > right) --length;
     Move(rp, x, y);
     Text(rp, (STRPTR)text, length);
 }
@@ -86,9 +87,16 @@ void TK_Draw(TKApp *app)
     bright = app->screen_depth > 1 ? 2 : 1; dark = app->screen_depth > 1 ? 1 : 0;
     SetAPen(rp, 0); RectFill(rp, w->BorderLeft, w->BorderTop, w->Width - w->BorderRight - 1, w->Height - w->BorderBottom - 1);
     draw_frame(rp, l, t, r, b, bright, dark); SetAPen(rp, 1);
-    draw_text(rp, l + 10, t + 18, "Tankerkoenig " TK_VERSION);
-    draw_text(rp, l + 10, t + 34, "Fuel price finder for AmigaOS");
-    draw_text(rp, l + 10, t + 58, "Phase 1: application foundation ready");
+    draw_text(rp, l + 10, t + 18, r - 4, "Tankerkoenig " TK_VERSION);
+    draw_text(rp, l + 10, t + 34, r - 4, "Fuel price finder for AmigaOS");
+    draw_text(rp, l + 10, t + 54, r - 4, "Location:");
+    draw_text(rp, l + 90, t + 54, r - 4, app->config.location);
+    draw_text(rp, l + 10, t + 70, r - 4, "Fuel:");
+    draw_text(rp, l + 90, t + 70, r - 4, TK_ConfigFuelName(app->config.fuel));
+    draw_text(rp, l + 10, t + 86, r - 4, "Sort:");
+    draw_text(rp, l + 90, t + 86, r - 4, TK_ConfigSortName(app->config.sort));
+    draw_text(rp, l + 10, t + 102, r - 4, "API key:");
+    draw_text(rp, l + 90, t + 102, r - 4, TK_ConfigHasApiKey(&app->config) ? "configured" : "missing");
 }
 int TK_Run(TKApp *app)
 {
