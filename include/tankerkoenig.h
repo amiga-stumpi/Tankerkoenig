@@ -5,6 +5,7 @@
 #include "config.h"
 #include "https.h"
 #include "geocode.h"
+#include "stations.h"
 #define TK_APP_NAME "Tankerkoenig"
 #define TK_VERSION "0.1"
 #define TK_MIN_WIDTH 320
@@ -14,11 +15,12 @@
 #define TK_MAX_WIDTH 640
 #define TK_MAX_HEIGHT 256
 #define TK_NETWORK_BUFFER_SIZE 8192UL
-#define TK_JSON_BUFFER_SIZE 32768UL
+#define TK_JSON_BUFFER_SIZE 131072UL
 typedef struct TKApp {
     TKConfig config;
     TKHttpsClient https;
     TKLocationResults locations;
+    TKStationResults stations;
     char status[80];
     struct Window *window;
     UBYTE *network_buffer;

@@ -86,6 +86,20 @@ static void location_line(const TKLocationResult *item,int index,char *line,int 
     if (item->admin[0]) { append_text(line,size,", "); append_text(line,size,item->admin); }
     if (item->country[0]) { append_text(line,size,", "); append_text(line,size,item->country); }
 }
+static void station_line(const TKStation *item,const TKConfig *config,char *line,int size)
+{
+    line[0]=0;
+    if (config->fuel==TK_FUEL_ALL) {
+        append_text(line,size,"D:"); append_text(line,size,item->diesel[0]?item->diesel:"-");
+        append_text(line,size," E5:"); append_text(line,size,item->e5[0]?item->e5:"-");
+        append_text(line,size," E10:"); append_text(line,size,item->e10[0]?item->e10:"-");
+    } else {
+        append_text(line,size,item->price[0]?item->price:"-"); append_text(line,size," EUR");
+    }
+    append_text(line,size,"  "); append_text(line,size,item->name);
+    if (item->distance[0]) { append_text(line,size," ("); append_text(line,size,item->distance); append_text(line,size," km)"); }
+    append_text(line,size,item->is_open?" open":" closed");
+}
 void TK_Draw(TKApp *app)
 {
     struct Window *w; struct RastPort *rp; WORD l,t,r,b; UBYTE bright,dark; int i; char line[160];
@@ -101,7 +115,13 @@ void TK_Draw(TKApp *app)
     draw_text(rp,l+10,t+62,r-4,"Sort:"); draw_text(rp,l+90,t+62,r-4,TK_ConfigSortName(app->config.sort));
     draw_text(rp,l+10,t+76,r-4,"API key:"); draw_text(rp,l+90,t+76,r-4,TK_ConfigHasApiKey(&app->config)?"configured":"missing");
     draw_text(rp,l+10,t+94,r-4,app->status);
-    if (app->locations.count) {
+    if (app->stations.count) {
+        draw_text(rp,l+10,t+112,r-4,"Nearby fuel stations:");
+        for (i=0;i<app->stations.count&&i<4;++i) {
+            station_line(&app->stations.items[i],&app->config,line,sizeof(line));
+            draw_text(rp,l+10,t+128+i*14,r-4,line);
+        }
+    } else if (app->locations.count) {
         draw_text(rp,l+10,t+112,r-4,"Select location with keys 1-4:");
         for (i=0;i<app->locations.count;++i) {
             location_line(&app->locations.items[i],i,line,sizeof(line));
@@ -114,7 +134,7 @@ static void search_locations(TKApp *app)
 {
     int result;
     if (!app->https.initialized) { TK_SetStatus(app,"HTTPS is not available"); TK_Draw(app); return; }
-    app->locations.count=0; app->selected_location=-1; TK_SetStatus(app,"Searching locations - please wait"); TK_Draw(app);
+    app->locations.count=0; app->stations.count=0; app->selected_location=-1; TK_SetStatus(app,"Searching locations - please wait"); TK_Draw(app);
     result=TK_GeocodeSearch(&app->https,app->config.location,app->json_buffer,app->json_buffer_size,&app->locations);
     if (result==TK_GEOCODE_OK) TK_SetStatus(app,"Location results loaded");
     else TK_SetStatus(app,TK_GeocodeErrorText(result));
@@ -131,6 +151,16 @@ static void select_location(TKApp *app,int index)
     if (TK_SaveConfig(&app->config)) TK_SetStatus(app,"Location selected and saved"); else TK_SetStatus(app,"Location selected; configuration save failed");
     TK_Draw(app);
 }
+static void update_stations(TKApp *app)
+{
+    int result;
+    if (!app->https.initialized) { TK_SetStatus(app,"HTTPS is not available"); TK_Draw(app); return; }
+    app->stations.count=0; TK_SetStatus(app,"Loading fuel prices - please wait"); TK_Draw(app);
+    result=TK_StationsSearch(&app->https,&app->config,app->json_buffer,app->json_buffer_size,&app->stations);
+    if (result==TK_STATIONS_OK) { app->locations.count=0; TK_SetStatus(app,"Fuel prices loaded"); }
+    else TK_SetStatus(app,TK_StationsErrorText(result));
+    TK_Draw(app);
+}
 int TK_Run(TKApp *app)
 {
     ULONG mask; int done=0; if (!app||!app->window||!app->window->UserPort) return 20; mask=1UL<<app->window->UserPort->mp_SigBit;
@@ -143,6 +173,7 @@ int TK_Run(TKApp *app)
             else if (cls==IDCMP_NEWSIZE) TK_Draw(app);
             else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x10) done=1;
             else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x21) search_locations(app);
+            else if (cls==IDCMP_RAWKEY&&(code&0x7f)==0x16) update_stations(app);
             else if (cls==IDCMP_RAWKEY&&(code&0x7f)>=0x01&&(code&0x7f)<=0x04) select_location(app,(code&0x7f)-1);
         }
     }

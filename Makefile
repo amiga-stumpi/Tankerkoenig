@@ -6,12 +6,13 @@ BUILD := build
 TARGET := $(BUILD)/Tankerkoenig
 CORE := $(BUILD)/tkcore
 TARGET_OBJS := $(BUILD)/launcher.o
-CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o $(BUILD)/config.o $(BUILD)/https.o $(BUILD)/json.o $(BUILD)/geocode.o $(BUILD)/amitls13_client_stubs.o
+CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o $(BUILD)/config.o $(BUILD)/https.o $(BUILD)/json.o $(BUILD)/geocode.o $(BUILD)/stations.o $(BUILD)/amitls13_client_stubs.o
 CONFIG := $(BUILD)/Tankerkoenig.conf
 HOST_CC ?= cc
 HOST_TEST := $(BUILD)/json_test
 GEOCODE_TEST := $(BUILD)/geocode_test
-.PHONY: all clean test-json test-geocode test
+STATIONS_TEST := $(BUILD)/stations_test
+.PHONY: all clean test-json test-geocode test-stations test
 all: $(TARGET) $(CORE) $(CONFIG)
 $(BUILD):
 	mkdir -p $(BUILD)
@@ -38,7 +39,13 @@ $(GEOCODE_TEST): src/json.c src/geocode.c tests/geocode_test.c | $(BUILD)
 test-geocode: $(GEOCODE_TEST)
 	$(GEOCODE_TEST)
 
-test: test-json test-geocode
+$(STATIONS_TEST): src/json.c src/stations.c tests/stations_test.c | $(BUILD)
+	$(HOST_CC) -std=c89 -Wall -Wextra -pedantic -Itests/host_include -Iinclude -o $@ src/json.c src/stations.c tests/stations_test.c
+
+test-stations: $(STATIONS_TEST)
+	$(STATIONS_TEST)
+
+test: test-json test-geocode test-stations
 
 clean:
 	rm -rf $(BUILD)

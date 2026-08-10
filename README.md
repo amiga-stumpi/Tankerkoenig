@@ -4,7 +4,7 @@ Tankerkoenig is a planned native AmigaOS fuel-price finder. It will resolve loca
 
 ## Current Status
 
-Phases 1 through 5 are implemented:
+Phases 1 through 6 are implemented:
 
 - C89-compatible AmigaOS 1.3 project foundation.
 - bebbo/amiga-gcc build using the nix13 runtime.
@@ -26,8 +26,14 @@ Phases 1 through 5 are implemented:
 - Correct URL encoding of Amiga Latin-1 location names.
 - Up to four selectable results with name, region, country and coordinates.
 - Selected location and coordinates are saved to `Tankerkoenig.conf`.
+- Tankerkoenig `list.php` requests for E5, E10, diesel or all fuels.
+- Mandatory API `ok` validation and explicit rejected-request handling.
+- Bounded parsing of station identity, address, distance, opening state and prices.
+- Missing prices and closed stations are represented without invalid numeric values.
+- Optional closed-station filtering through `open_only`.
+- Personal API keys are never included in status or diagnostic output.
 
-Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. Phase 4 adds a bounded, allocation-free JSON token parser with Amiga Latin-1 conversion. Phase 5 adds Open-Meteo location search and persistent result selection. Tankerkoenig fuel-price requests are not implemented yet.
+Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. Phase 4 adds a bounded, allocation-free JSON token parser with Amiga Latin-1 conversion. Phase 5 adds Open-Meteo location search and persistent result selection. Phase 6 adds bounded Tankerkoenig fuel-station and price retrieval.
 
 ## Build
 
@@ -47,7 +53,8 @@ Install `amitls13.library` version 2.0 or newer in `LIBS:` and start the
 application through the `Tankerkoenig` launcher. The status line reports
 whether HTTPS initialization succeeded. Then press `S` to search
 for the location stored in `Tankerkoenig.conf`. Up to four results are shown. Press
-`1`, `2`, `3` or `4` to select a result and save its coordinates.
+`1`, `2`, `3` or `4` to select a result and save its coordinates. With a valid
+personal API key configured, press `U` to retrieve nearby stations and prices.
 
 Do not start `tkcore` directly: the launcher supplies the 131072-byte stack
 recommended by the AmiTLS13 SDK.

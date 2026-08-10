@@ -70,7 +70,10 @@ Implemented with bounded URL encoding for ASCII and Amiga Latin-1 input, HTTPS r
 - Show up to four selectable results.
 - Save the selected location and coordinates in the configuration.
 
-## Phase 6: Tankerkoenig API
+## Phase 6: Tankerkoenig API (completed)
+
+Implemented as a bounded `list.php` client using the selected coordinates and configuration. It validates the mandatory `ok` flag, stores at most 16 stations, supports single-fuel `price` and `type=all` prices, filters closed stations when requested, and never emits the personal API key to status or diagnostics. During the prototype UI stage, `U` loads prices and displays the first four stations.
+
 
 - Query `list.php` using the selected coordinates, radius, fuel type and sorting mode.
 - Always inspect the API `ok` flag before processing results.

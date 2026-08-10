@@ -12,7 +12,7 @@ int main(void)
     if (!TK_AllocateBuffers(&app)) goto cleanup;
     {
         int https_result = TK_HttpsOpen(&app.https);
-        TK_SetStatus(&app, https_result == TK_HTTPS_OK ? "HTTPS ready - press S to search" : TK_HttpsErrorText(https_result));
+        TK_SetStatus(&app, https_result == TK_HTTPS_OK ? "S: search location  U: load prices" : TK_HttpsErrorText(https_result));
     }
     if (!TK_OpenWindow(&app)) goto cleanup;
     TK_Draw(&app);
