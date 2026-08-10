@@ -11,6 +11,7 @@
 #define HTTPS_REQUEST_SIZE 768
 #define HTTPS_LOCATION_SIZE 512
 #define HTTPS_REDIRECT_LIMIT 3
+#define HTTPS_READ_CHUNK 2048L
 struct Library *AmiTLS13Base = 0;
 static char g_host[HTTPS_HOST_SIZE];
 static char g_path[HTTPS_PATH_SIZE];
@@ -170,7 +171,12 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     written = AmiTLS13_Write(context, (const UBYTE *)g_request, strlen(g_request));
     if (written != (LONG)strlen(g_request)) { client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_WRITE_FAILED; goto done; }
     while (used < output_size - 1) {
-        received = AmiTLS13_Read(context, output + used, output_size - 1 - used);
+        LONG remaining = output_size - 1 - used;
+        LONG read_size;
+        if (expected_total >= 0 && expected_total - used < remaining) remaining = expected_total - used;
+        if (remaining <= 0) break;
+        read_size = remaining < HTTPS_READ_CHUNK ? remaining : HTTPS_READ_CHUNK;
+        received = AmiTLS13_Read(context, output + used, (ULONG)read_size);
         if (received < 0) {
             if (expected_total >= 0 && used >= expected_total) break;
             client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_READ_FAILED; goto done;
