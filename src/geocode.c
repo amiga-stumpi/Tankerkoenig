@@ -79,12 +79,13 @@ static int parse_result_object(TKJsonParser *p,TKLocationResult *item)
         key=t;
         if (!next_type(p,&t,TK_JSON_TOKEN_COLON)) return 0;
         if (TK_JsonTokenEquals(&key,"name")||TK_JsonTokenEquals(&key,"admin1")||
-            TK_JsonTokenEquals(&key,"country")||TK_JsonTokenEquals(&key,"latitude")||
+            TK_JsonTokenEquals(&key,"country")||TK_JsonTokenEquals(&key,"country_code")||TK_JsonTokenEquals(&key,"latitude")||
             TK_JsonTokenEquals(&key,"longitude")) {
             if (TK_JsonNext(p,&value)!=TK_JSON_OK) return 0;
             if (TK_JsonTokenEquals(&key,"name")) { if (!token_text(&value,item->name,sizeof(item->name))) return 0; }
             else if (TK_JsonTokenEquals(&key,"admin1")) { if (!token_text(&value,item->admin,sizeof(item->admin))) return 0; }
             else if (TK_JsonTokenEquals(&key,"country")) { if (!token_text(&value,item->country,sizeof(item->country))) return 0; }
+            else if (TK_JsonTokenEquals(&key,"country_code")) { if (!token_text(&value,item->country_code,sizeof(item->country_code))) return 0; }
             else if (TK_JsonTokenEquals(&key,"latitude")) { if (!token_number(&value,item->latitude,sizeof(item->latitude))) return 0; }
             else if (!token_number(&value,item->longitude,sizeof(item->longitude))) return 0;
         } else if (TK_JsonSkipValue(p)!=TK_JSON_OK) return 0;
@@ -109,10 +110,12 @@ static int parse_results(TKJsonParser *p,TKLocationResults *results)
             if (t.type!=TK_JSON_TOKEN_COMMA || TK_JsonNext(p,&t)!=TK_JSON_OK) return 0;
         }
         if (t.type!=TK_JSON_TOKEN_OBJECT_BEGIN) return 0;
-        if (results->count<TK_GEOCODE_MAX_RESULTS) {
-            if (!parse_result_object(p,&results->items[results->count])) return 0;
-            ++results->count;
-        } else { TKLocationResult ignored; if (!parse_result_object(p,&ignored)) return 0; }
+        {
+            TKLocationResult candidate;
+            if (!parse_result_object(p,&candidate)) return 0;
+            if (candidate.country_code[0]=='D' && candidate.country_code[1]=='E' && !candidate.country_code[2] && results->count<TK_GEOCODE_MAX_RESULTS)
+                results->items[results->count++]=candidate;
+        }
         first=0;
     }
 }
@@ -142,7 +145,7 @@ int TK_GeocodeSearch(TKHttpsClient *https,const char *location,UBYTE *buffer,LON
     char encoded[256]; LONG length=0; int result;
     if (!https||!results||!buffer||size<2||!url_encode_location(location,encoded,sizeof(encoded))) return TK_GEOCODE_BAD_QUERY;
     copy(g_url,sizeof(g_url),"https://geocoding-api.open-meteo.com/v1/search?name=");
-    if (!append(g_url,sizeof(g_url),encoded)||!append(g_url,sizeof(g_url),"&count=4&language=en&format=json")) return TK_GEOCODE_BAD_QUERY;
+    if (!append(g_url,sizeof(g_url),encoded)||!append(g_url,sizeof(g_url),"&count=4&countryCode=DE&language=en&format=json")) return TK_GEOCODE_BAD_QUERY;
     result=TK_HttpsGet(https,g_url,buffer,size,&length);
     if (result!=TK_HTTPS_OK) return result;
     if (https->last_http_status!=200) return TK_GEOCODE_BAD_RESPONSE;

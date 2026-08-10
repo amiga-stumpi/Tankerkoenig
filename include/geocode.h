@@ -14,6 +14,7 @@ typedef struct TKLocationResult {
     char name[TK_GEOCODE_TEXT_SIZE];
     char admin[TK_GEOCODE_TEXT_SIZE];
     char country[TK_GEOCODE_TEXT_SIZE];
+    char country_code[3];
     char latitude[TK_GEOCODE_COORD_SIZE];
     char longitude[TK_GEOCODE_COORD_SIZE];
 } TKLocationResult;
