@@ -3,6 +3,7 @@
 #include <exec/types.h>
 #include <intuition/intuition.h>
 #include "config.h"
+#include "https.h"
 #define TK_APP_NAME "Tankerkoenig"
 #define TK_VERSION "0.1"
 #define TK_MIN_WIDTH 320
@@ -15,6 +16,8 @@
 #define TK_JSON_BUFFER_SIZE 32768UL
 typedef struct TKApp {
     TKConfig config;
+    TKHttpsClient https;
+    char status[80];
     struct Window *window;
     UBYTE *network_buffer;
     UBYTE *json_buffer;
@@ -30,4 +33,5 @@ int TK_OpenWindow(TKApp *app);
 void TK_CloseWindow(TKApp *app);
 void TK_Draw(TKApp *app);
 int TK_Run(TKApp *app);
+void TK_SetStatus(TKApp *app, const char *status);
 #endif

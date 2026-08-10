@@ -10,6 +10,13 @@
 #include "tankerkoenig.h"
 struct IntuitionBase *IntuitionBase;
 struct GfxBase *GfxBase;
+void TK_SetStatus(TKApp *app, const char *status)
+{
+    int i = 0;
+    if (!app) return;
+    while (status && status[i] && i < (int)sizeof(app->status) - 1) { app->status[i] = status[i]; ++i; }
+    app->status[i] = 0;
+}
 static void draw_text(struct RastPort *rp, WORD x, WORD y, WORD right, const char *text)
 {
     ULONG length = 0;
@@ -89,14 +96,28 @@ void TK_Draw(TKApp *app)
     draw_frame(rp, l, t, r, b, bright, dark); SetAPen(rp, 1);
     draw_text(rp, l + 10, t + 18, r - 4, "Tankerkoenig " TK_VERSION);
     draw_text(rp, l + 10, t + 34, r - 4, "Fuel price finder for AmigaOS");
-    draw_text(rp, l + 10, t + 54, r - 4, "Location:");
-    draw_text(rp, l + 90, t + 54, r - 4, app->config.location);
-    draw_text(rp, l + 10, t + 70, r - 4, "Fuel:");
-    draw_text(rp, l + 90, t + 70, r - 4, TK_ConfigFuelName(app->config.fuel));
-    draw_text(rp, l + 10, t + 86, r - 4, "Sort:");
-    draw_text(rp, l + 90, t + 86, r - 4, TK_ConfigSortName(app->config.sort));
-    draw_text(rp, l + 10, t + 102, r - 4, "API key:");
-    draw_text(rp, l + 90, t + 102, r - 4, TK_ConfigHasApiKey(&app->config) ? "configured" : "missing");
+    draw_text(rp, l + 10, t + 50, r - 4, "Location:");
+    draw_text(rp, l + 90, t + 50, r - 4, app->config.location);
+    draw_text(rp, l + 10, t + 64, r - 4, "Fuel:");
+    draw_text(rp, l + 90, t + 64, r - 4, TK_ConfigFuelName(app->config.fuel));
+    draw_text(rp, l + 10, t + 78, r - 4, "Sort:");
+    draw_text(rp, l + 90, t + 78, r - 4, TK_ConfigSortName(app->config.sort));
+    draw_text(rp, l + 10, t + 92, r - 4, "API key:");
+    draw_text(rp, l + 90, t + 92, r - 4, TK_ConfigHasApiKey(&app->config) ? "configured" : "missing");
+    draw_text(rp, l + 10, t + 108, r - 4, app->status);
+}
+static void run_https_test(TKApp *app)
+{
+    static const char test_url[] = "https://geocoding-api.open-meteo.com/v1/search?name=Berlin&count=1&language=en&format=json";
+    LONG length = 0;
+    int result;
+    if (!app->https.initialized) { TK_SetStatus(app, "HTTPS is not available"); TK_Draw(app); return; }
+    TK_SetStatus(app, "Testing HTTPS - please wait"); TK_Draw(app);
+    result = TK_HttpsGet(&app->https, test_url, app->json_buffer, app->json_buffer_size, &length);
+    if (result == TK_HTTPS_OK && app->https.last_http_status == 200 && length > 0) TK_SetStatus(app, "HTTPS test successful");
+    else if (result == TK_HTTPS_OK) TK_SetStatus(app, "HTTPS test HTTP error");
+    else TK_SetStatus(app, TK_HttpsErrorText(result));
+    TK_Draw(app);
 }
 int TK_Run(TKApp *app)
 {
@@ -113,6 +134,7 @@ int TK_Run(TKApp *app)
             else if (cls == IDCMP_REFRESHWINDOW) { BeginRefresh(app->window); TK_Draw(app); EndRefresh(app->window, TRUE); }
             else if (cls == IDCMP_NEWSIZE) TK_Draw(app);
             else if (cls == IDCMP_RAWKEY && (code & 0x7f) == 0x10) done = 1;
+            else if (cls == IDCMP_RAWKEY && (code & 0x7f) == 0x14) run_https_test(app);
         }
     }
     return 0;

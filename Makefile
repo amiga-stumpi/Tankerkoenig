@@ -6,13 +6,15 @@ BUILD := build
 TARGET := $(BUILD)/Tankerkoenig
 CORE := $(BUILD)/tkcore
 TARGET_OBJS := $(BUILD)/launcher.o
-CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o $(BUILD)/config.o
+CORE_OBJS := $(BUILD)/main.o $(BUILD)/app.o $(BUILD)/config.o $(BUILD)/https.o $(BUILD)/amitls13_client_stubs.o
 CONFIG := $(BUILD)/Tankerkoenig.conf
 .PHONY: all clean
 all: $(TARGET) $(CORE) $(CONFIG)
 $(BUILD):
 	mkdir -p $(BUILD)
 $(BUILD)/%.o: src/%.c | $(BUILD)
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
+$(BUILD)/%.o: src/%.S | $(BUILD)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c -o $@ $<
 $(TARGET): $(TARGET_OBJS)
 	$(CC) $(LDFLAGS) -o $@ $(TARGET_OBJS)

@@ -9,11 +9,16 @@ int main(void)
     TK_LoadConfig(&app.config);
     if (!TK_OpenLibraries()) goto cleanup;
     if (!TK_AllocateBuffers(&app)) goto cleanup;
+    {
+        int https_result = TK_HttpsOpen(&app.https);
+        TK_SetStatus(&app, https_result == TK_HTTPS_OK ? "HTTPS ready - press T to test" : TK_HttpsErrorText(https_result));
+    }
     if (!TK_OpenWindow(&app)) goto cleanup;
     TK_Draw(&app);
     result = TK_Run(&app);
 cleanup:
     TK_CloseWindow(&app);
+    TK_HttpsClose(&app.https);
     TK_SaveConfig(&app.config);
     TK_FreeBuffers(&app);
     TK_CloseLibraries();

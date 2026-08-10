@@ -39,10 +39,10 @@ update_minutes=10
 - Never write the API key to logs or status messages.
 - Validate radius, fuel type, sorting mode and update interval.
 
-## Phase 3: HTTPS Client
+## Phase 3: HTTPS Client (completed)
 
 - Open and validate `bsdsocket.library` and `amitls13.library`.
-- Implement DNS lookup, TCP connection, TLS with SNI, bounded timeouts and cancellation.
+- Implement DNS lookup, TCP connection and TLS with SNI. AmiTLS13 provides bounded socket waits; cancellation inside a synchronous library call requires a future asynchronous API.
 - Handle partial writes and reads correctly.
 - Parse the HTTP status line and headers.
 - Support `Content-Length`, connection-close bodies and bounded redirects.
