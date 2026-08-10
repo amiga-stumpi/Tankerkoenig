@@ -4,11 +4,11 @@ Tankerkoenig is a planned native AmigaOS fuel-price finder. It will resolve loca
 
 ## Current Status
 
-Phases 1 through 4 are implemented:
+Phases 1 through 5 are implemented:
 
 - C89-compatible AmigaOS 1.3 project foundation.
 - bebbo/amiga-gcc build using the nix13 runtime.
-- Small launcher that starts the application core with a 65000-byte stack.
+- Small launcher that starts the application core with a 131072-byte stack.
 - Dynamically resizable Workbench window with refresh and close handling.
 - Fallback to a minimum-size window at position `0,0`.
 - Central cleanup for windows, libraries and allocated memory.
@@ -16,15 +16,18 @@ Phases 1 through 4 are implemented:
 - Validated configuration for API key, location, coordinates, radius, fuel, sorting, open-only filtering and update interval.
 - A user-owned API key is loaded and saved but never displayed or logged.
 - Reusable HTTPS GET client with SNI, HTTP status parsing, Content-Length handling, bounded responses and up to three HTTPS redirects.
-- Manual Open-Meteo transport test with the `T` key.
 - Graceful startup when AmiTLS13 or the TCP/IP stack is unavailable.
 - Core launcher stack increased to 131072 bytes for AmiTLS13.
 - Bounded JSON parser for objects, arrays, strings, numbers, booleans and null.
 - JSON escape and UTF-8 to Amiga Latin-1 conversion where representable.
 - Safe skipping of unknown values with nesting, string and result-count limits.
-- Host-side JSON regression fixtures and `make test-json` target.
+- Host-side JSON and geocoding regression tests with the `make test` target.
+- Open-Meteo location and postal-code search over HTTPS.
+- Correct URL encoding of Amiga Latin-1 location names.
+- Up to four selectable results with name, region, country and coordinates.
+- Selected location and coordinates are saved to `Tankerkoenig.conf`.
 
-Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. Phase 4 adds a bounded, allocation-free JSON token parser with Amiga Latin-1 conversion. Production API requests are not implemented yet.
+Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. Phase 4 adds a bounded, allocation-free JSON token parser with Amiga Latin-1 conversion. Phase 5 adds Open-Meteo location search and persistent result selection. Tankerkoenig fuel-price requests are not implemented yet.
 
 ## Build
 
@@ -38,12 +41,13 @@ Build output: `build/Tankerkoenig` and `build/tkcore`. Keep both in the same dir
 
 See [PLAN.md](PLAN.md).
 
-## HTTPS Test
+## Location Search Test
 
 Install `amitls13.library` version 2.0 or newer in `LIBS:` and start the
 application through the `Tankerkoenig` launcher. The status line reports
-whether HTTPS initialization succeeded. Press `T` to fetch a small Open-Meteo
-geocoding response. A successful request displays `HTTPS test successful`.
+whether HTTPS initialization succeeded. Then press `S` to search
+for the location stored in `Tankerkoenig.conf`. Up to four results are shown. Press
+`1`, `2`, `3` or `4` to select a result and save its coordinates.
 
 Do not start `tkcore` directly: the launcher supplies the 131072-byte stack
 recommended by the AmiTLS13 SDK.

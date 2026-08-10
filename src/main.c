@@ -7,11 +7,12 @@ int main(void)
     int result = 20;
     memset(&app, 0, sizeof(app));
     TK_LoadConfig(&app.config);
+    app.selected_location = -1;
     if (!TK_OpenLibraries()) goto cleanup;
     if (!TK_AllocateBuffers(&app)) goto cleanup;
     {
         int https_result = TK_HttpsOpen(&app.https);
-        TK_SetStatus(&app, https_result == TK_HTTPS_OK ? "HTTPS ready - press T to test" : TK_HttpsErrorText(https_result));
+        TK_SetStatus(&app, https_result == TK_HTTPS_OK ? "HTTPS ready - press S to search" : TK_HttpsErrorText(https_result));
     }
     if (!TK_OpenWindow(&app)) goto cleanup;
     TK_Draw(&app);

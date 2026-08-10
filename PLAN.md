@@ -59,7 +59,10 @@ Implemented as a token-based parser over the bounded HTTPS response buffer. It p
 - Enforce response, nesting, string and result-count limits.
 - Add host-side fixtures for valid, incomplete and malformed responses.
 
-## Phase 5: Open-Meteo Location Search
+## Phase 5: Open-Meteo Location Search (completed)
+
+Implemented with bounded URL encoding for ASCII and Amiga Latin-1 input, HTTPS retrieval, strict JSON validation, safe unknown-field handling and a four-result storage limit. During the prototype UI stage, `S` searches the configured location and keys `1` through `4` select and persist a result.
+
 
 - URL-encode place names and postal codes.
 - Query the Open-Meteo geocoding API over HTTPS.
