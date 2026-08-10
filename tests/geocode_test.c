@@ -24,7 +24,9 @@ int main(void)
     memset(&https,0,sizeof(https)); https.last_http_status=200;
     r=TK_GeocodeSearch(&https,"Osnabr\374ck",buffer,sizeof(buffer),&results);
     if (r!=TK_GEOCODE_OK) { printf("FAIL result %d\n",r); return 1; }
-    if (!strstr(requested_url,"name=Osnabr%C3%BCck")) { printf("FAIL URL %s\n",requested_url); return 1; }
+    if (!strstr(requested_url,"name=Osnabr%C3%BCck")||!strstr(requested_url,"count=4")) { printf("FAIL URL %s\n",requested_url); return 1; }
+    r=TK_GeocodeSearch(&https,"M\303\274nster",buffer,sizeof(buffer),&results);
+    if (r!=TK_GEOCODE_OK||!strstr(requested_url,"name=M%C3%BCnster")) { printf("FAIL UTF-8 URL %s\n",requested_url); return 1; }
     if (results.count!=4) { printf("FAIL count %d\n",results.count); return 1; }
     if ((unsigned char)results.items[0].name[6]!=0xfc || strcmp(results.items[0].latitude,"52.2799")) { puts("FAIL first result"); return 1; }
     if ((unsigned char)results.items[1].name[1]!=0xf6) { puts("FAIL UTF-8 result"); return 1; }

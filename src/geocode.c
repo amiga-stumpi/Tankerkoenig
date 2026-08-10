@@ -34,8 +34,16 @@ static int url_encode_location(const char *text,char *out,long size)
             if (used>=size-1) return 0;
             out[used++]='+';
         } else if (c>=0x80) {
-            unsigned int first=0xC0|(c>>6),second=0x80|(c&0x3F);
-            if (!append_encoded_byte(out,size,&used,first)||!append_encoded_byte(out,size,&used,second)) return 0;
+            int count=c>=0xC2&&c<=0xDF?1:(c>=0xE0&&c<=0xEF?2:(c>=0xF0&&c<=0xF4?3:0));
+            int valid=count>0,i;
+            for (i=0;i<count&&valid;++i) { unsigned int n=(unsigned char)text[i]; if (n<0x80||n>0xBF) valid=0; }
+            if (valid) {
+                if (!append_encoded_byte(out,size,&used,c)) return 0;
+                for (i=0;i<count;++i) if (!append_encoded_byte(out,size,&used,(unsigned char)*text++)) return 0;
+            } else {
+                unsigned int first=0xC0|(c>>6),second=0x80|(c&0x3F);
+                if (!append_encoded_byte(out,size,&used,first)||!append_encoded_byte(out,size,&used,second)) return 0;
+            }
         } else if (!append_encoded_byte(out,size,&used,c)) return 0;
     }
     out[used]=0; return 1;
@@ -134,7 +142,7 @@ int TK_GeocodeSearch(TKHttpsClient *https,const char *location,UBYTE *buffer,LON
     char encoded[256]; LONG length=0; int result;
     if (!https||!results||!buffer||size<2||!url_encode_location(location,encoded,sizeof(encoded))) return TK_GEOCODE_BAD_QUERY;
     copy(g_url,sizeof(g_url),"https://geocoding-api.open-meteo.com/v1/search?name=");
-    if (!append(g_url,sizeof(g_url),encoded)||!append(g_url,sizeof(g_url),"&count=10&language=en&format=json")) return TK_GEOCODE_BAD_QUERY;
+    if (!append(g_url,sizeof(g_url),encoded)||!append(g_url,sizeof(g_url),"&count=4&language=en&format=json")) return TK_GEOCODE_BAD_QUERY;
     result=TK_HttpsGet(https,g_url,buffer,size,&length);
     if (result!=TK_HTTPS_OK) return result;
     if (https->last_http_status!=200) return TK_GEOCODE_BAD_RESPONSE;
