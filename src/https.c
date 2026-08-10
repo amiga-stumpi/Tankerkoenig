@@ -155,7 +155,8 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     LONG output_size, LONG *output_length, WORD *status, char *redirect_location)
 {
     struct AmiTLS13Context *context = 0; UWORD port; LONG written; LONG used = 0; LONG received;
-    LONG header_size; LONG body_length; LONG declared_length; char *body; UBYTE extra;
+    LONG header_size; LONG body_length; LONG declared_length; LONG expected_total = -1;
+    LONG early_header_size = 0; char *body; char *early_body; UBYTE extra;
     int result = TK_HTTPS_OK;
     redirect_location[0] = 0;
     if (!parse_url(url, g_host, sizeof(g_host), g_path, sizeof(g_path), &port)) return TK_HTTPS_BAD_URL;
@@ -170,11 +171,26 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     if (written != (LONG)strlen(g_request)) { client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_WRITE_FAILED; goto done; }
     while (used < output_size - 1) {
         received = AmiTLS13_Read(context, output + used, output_size - 1 - used);
-        if (received < 0) { client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_READ_FAILED; goto done; }
+        if (received < 0) {
+            if (expected_total >= 0 && used >= expected_total) break;
+            client->last_tls_error = AmiTLS13_GetLastError(context); result = TK_HTTPS_READ_FAILED; goto done;
+        }
         if (received == 0) break;
         used += received;
+        output[used] = 0;
+        if (expected_total < 0) {
+            early_body = find_header_end((char *)output, used, &early_header_size);
+            if (early_body) {
+                declared_length = parse_content_length((char *)output, early_header_size);
+                if (declared_length >= 0) {
+                    if (declared_length > output_size - 1 - early_header_size) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; }
+                    expected_total = early_header_size + declared_length;
+                }
+            }
+        }
+        if (expected_total >= 0 && used >= expected_total) break;
     }
-    if (used == output_size - 1) { received = AmiTLS13_Read(context, &extra, 1); if (received > 0) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; } if (received < 0) { result = TK_HTTPS_READ_FAILED; goto done; } }
+    if (used == output_size - 1 && (expected_total < 0 || used < expected_total)) { received = AmiTLS13_Read(context, &extra, 1); if (received > 0) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; } if (received < 0) { result = TK_HTTPS_READ_FAILED; goto done; } }
     output[used] = 0; *status = parse_status((char *)output, used);
     if (!*status) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
     body = find_header_end((char *)output, used, &header_size);
