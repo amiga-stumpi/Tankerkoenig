@@ -5,6 +5,7 @@
 #include "amitls13.h"
 #include "amitls13_libbase.h"
 #include "https.h"
+#include "http_chunk.h"
 #define HTTPS_HOST_SIZE 128
 #define HTTPS_PATH_SIZE 512
 #define HTTPS_URL_SIZE 768
@@ -157,7 +158,8 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
 {
     struct AmiTLS13Context *context = 0; UWORD port; LONG written; LONG used = 0; LONG received;
     LONG header_size; LONG body_length; LONG declared_length; LONG expected_total = -1;
-    LONG early_header_size = 0; char *body; char *early_body; UBYTE extra;
+    LONG early_header_size = 0; long chunk_length = 0; char *body; char *early_body; UBYTE extra;
+    int chunked = 0;
     int result = TK_HTTPS_OK;
     redirect_location[0] = 0;
     if (!parse_url(url, g_host, sizeof(g_host), g_path, sizeof(g_path), &port)) return TK_HTTPS_BAD_URL;
@@ -187,12 +189,18 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
         if (expected_total < 0) {
             early_body = find_header_end((char *)output, used, &early_header_size);
             if (early_body) {
+                chunked = header_is_chunked((char *)output, early_header_size);
                 declared_length = parse_content_length((char *)output, early_header_size);
-                if (declared_length >= 0) {
+                if (!chunked && declared_length >= 0) {
                     if (declared_length > output_size - 1 - early_header_size) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; }
                     expected_total = early_header_size + declared_length;
                 }
             }
+        }
+        if (chunked && expected_total < 0) {
+            int complete = TK_HttpChunkComplete((char *)output + early_header_size, used - early_header_size, &chunk_length);
+            if (complete < 0) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
+            if (complete > 0) expected_total = early_header_size + chunk_length;
         }
         if (expected_total >= 0 && used >= expected_total) break;
     }
@@ -203,8 +211,12 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     if (!body) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
     if ((*status == 301 || *status == 302 || *status == 303 || *status == 307 || *status == 308) &&
         !extract_location((char *)output, header_size, redirect_location, HTTPS_LOCATION_SIZE)) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
-    if (header_is_chunked((char *)output, header_size)) { result = TK_HTTPS_UNSUPPORTED_ENCODING; goto done; }
-    body_length = used - header_size; declared_length = parse_content_length((char *)output, header_size);
+    body_length = used - header_size;
+    if (header_is_chunked((char *)output, header_size)) {
+        long decoded_length;
+        if (TK_HttpChunkDecode(body, body_length, &decoded_length) != TK_HTTP_CHUNK_COMPLETE) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
+        body_length = decoded_length;
+    } declared_length = parse_content_length((char *)output, header_size);
     if (declared_length >= 0 && body_length < declared_length) { result = TK_HTTPS_BAD_RESPONSE; goto done; }
     if (declared_length >= 0) body_length = declared_length;
     memmove(output, body, body_length); output[body_length] = 0; *output_length = body_length;

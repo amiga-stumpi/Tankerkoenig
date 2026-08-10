@@ -15,7 +15,7 @@ Phases 1 through 6 are implemented:
 - Large future network and JSON buffers allocated in public memory instead of the process stack.
 - Validated configuration for API key, location, coordinates, radius, fuel, sorting, open-only filtering and update interval.
 - A user-owned API key is loaded and saved but never displayed or logged.
-- Reusable HTTPS GET client with SNI, HTTP status parsing, Content-Length handling, bounded responses and up to three HTTPS redirects.
+- Reusable HTTPS GET client with SNI, HTTP status parsing, Content-Length and chunked-transfer handling, bounded responses and up to three HTTPS redirects.
 - Graceful startup when AmiTLS13 or the TCP/IP stack is unavailable.
 - Core launcher stack increased to 131072 bytes for AmiTLS13.
 - Bounded JSON parser for objects, arrays, strings, numbers, booleans and null.

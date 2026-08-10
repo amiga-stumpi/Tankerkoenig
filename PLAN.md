@@ -45,7 +45,7 @@ update_minutes=10
 - Implement DNS lookup, TCP connection and TLS with SNI. AmiTLS13 provides bounded socket waits; cancellation inside a synchronous library call requires a future asynchronous API.
 - Handle partial writes and reads correctly.
 - Parse the HTTP status line and headers.
-- Support `Content-Length`, connection-close bodies and bounded redirects.
+- Support `Content-Length`, chunked transfer encoding, connection-close bodies and bounded redirects.
 - Close TLS, sockets and libraries in a defined and crash-safe order.
 - Display a clear message when AmiTLS13 is unavailable.
 
