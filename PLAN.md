@@ -10,7 +10,7 @@
 - Every user supplies a personal Tankerkoenig API key.
 - Small bounded JSON parser without a large external runtime.
 
-## Phase 1: Project Foundation
+## Phase 1: Project Foundation (completed)
 
 - Create the C89-compatible source tree and Makefile.
 - Add a launcher/core arrangement if a larger runtime stack is required.
