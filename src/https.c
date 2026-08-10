@@ -159,7 +159,7 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
     struct AmiTLS13Context *context = 0; UWORD port; LONG written; LONG used = 0; LONG received;
     LONG header_size; LONG body_length; LONG declared_length; LONG expected_total = -1;
     LONG early_header_size = 0; long chunk_length = 0; char *body; char *early_body; UBYTE extra;
-    int chunked = 0;
+    int chunked = 0; int close_delimited = 0;
     int result = TK_HTTPS_OK;
     redirect_location[0] = 0;
     client->last_response_bytes = 0; client->response_chunked = 0; client->last_tls_error = 0; client->last_socket_error = 0;
@@ -182,6 +182,7 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
         received = AmiTLS13_Read(context, output + used, (ULONG)read_size);
         if (received < 0) {
             if (expected_total >= 0 && used >= expected_total) break;
+            if (close_delimited) break;
             client->last_response_bytes = used; client->last_tls_error = AmiTLS13_GetLastError(context); client->last_socket_error = AmiTLS13_SocketErrno(); result = TK_HTTPS_READ_FAILED; goto done;
         }
         if (received == 0) break;
@@ -195,7 +196,7 @@ static int request_once(TKHttpsClient *client, const char *url, UBYTE *output,
                 if (!chunked && declared_length >= 0) {
                     if (declared_length > output_size - 1 - early_header_size) { result = TK_HTTPS_RESPONSE_TOO_LARGE; goto done; }
                     expected_total = early_header_size + declared_length;
-                }
+                } else if (!chunked) close_delimited = 1;
             }
         }
         if (chunked && expected_total < 0) {
