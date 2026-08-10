@@ -4,7 +4,7 @@ Tankerkoenig is a planned native AmigaOS fuel-price finder. It will resolve loca
 
 ## Current Status
 
-Phase 1 is implemented:
+Phases 1 through 4 are implemented:
 
 - C89-compatible AmigaOS 1.3 project foundation.
 - bebbo/amiga-gcc build using the nix13 runtime.
@@ -19,8 +19,12 @@ Phase 1 is implemented:
 - Manual Open-Meteo transport test with the `T` key.
 - Graceful startup when AmiTLS13 or the TCP/IP stack is unavailable.
 - Core launcher stack increased to 131072 bytes for AmiTLS13.
+- Bounded JSON parser for objects, arrays, strings, numbers, booleans and null.
+- JSON escape and UTF-8 to Amiga Latin-1 conversion where representable.
+- Safe skipping of unknown values with nesting, string and result-count limits.
+- Host-side JSON regression fixtures and `make test-json` target.
 
-Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. The personal API key is never displayed or logged. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. JSON parsing and production API requests are not implemented yet.
+Phase 2 adds validated loading and saving of `Tankerkoenig.conf`. Phase 3 adds a reusable in-memory HTTPS client through AmiTLS13 2.0. Phase 4 adds a bounded, allocation-free JSON token parser with Amiga Latin-1 conversion. Production API requests are not implemented yet.
 
 ## Build
 

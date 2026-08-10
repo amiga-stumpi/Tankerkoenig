@@ -49,7 +49,9 @@ update_minutes=10
 - Close TLS, sockets and libraries in a defined and crash-safe order.
 - Display a clear message when AmiTLS13 is unavailable.
 
-## Phase 4: Bounded JSON Parser
+## Phase 4: Bounded JSON Parser (completed)
+
+Implemented as a token-based parser over the bounded HTTPS response buffer. It performs no per-token allocation, limits nesting to 16 levels and source strings to 255 bytes, converts representable UTF-8 and `\uXXXX` characters to Amiga Latin-1, and provides a safe unknown-value skip operation. Host regression fixtures cover valid, truncated and malformed input plus limit and decoding checks.
 
 - Implement a small C89 JSON parser for objects, arrays, strings, numbers, booleans and null.
 - Decode JSON escapes and convert UTF-8 display text to Amiga Latin-1 where possible.
